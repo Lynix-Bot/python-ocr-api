@@ -36,7 +36,7 @@ def create_connection(host_name, user_name, user_password, db_name):
         print(f"The error '{e}' occurred")
     return connection
 
-connection = create_connection("localhost", "root", "", "scan")
+connection = create_connection("localhost", "u960465142_userkosong", "databaseKosong123", "u960465142_inikosong")
 
 # Function to execute a query
 def execute_query(connection, query, data):
