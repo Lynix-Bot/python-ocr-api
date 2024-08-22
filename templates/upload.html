@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Display</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Apply Calibri font style */
+        body {
+            font-family: 'Calibri', sans-serif;
+        }
+        /* File Upload Area */
+        .upload-area {
+            border: 2px dashed #007bff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+        .upload-area:hover {
+            background-color: #f8f9fa;
+        }
+        .upload-area h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .upload-area.dragging {
+            background-color: #e0e0e0;
+        }
+        #fileName {
+            font-size: 14px;
+            color: #28a745;
+            margin-top: 10px;
+        }
+        /* Center the submit button */
+        .submit-btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <form id="uploadForm" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+            <div class="upload-area" id="uploadArea">
+                <h2>Drag and Drop files to upload or <br>
+                    <button type="button" class="btn btn-primary" id="browseBtn">Browse</button>
+                </h2>
+                <p>Supported files: PDF</p>
+                <input type="file" name="file" class="form-control-file" id="fileInput" style="display: none;" required />
+                <p id="fileName"></p>
+            </div>
+            <div class="submit-btn-container">
+                <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+            <p class="error-message" id="errorMsg">Please upload a standard document format.</p>
+        </form>
+
+        <table class="table custom-table table-bordered" id="resultTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Discount</th>
+                    <th>Total Amount</th>
+                    <th>Document No</th>
+                    <th>Document Date</th>
+                    <th>Document Status</th>
+                    <th>Filename</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row['No'] }}</td>
+                    <td>{{ row['Description'] }}</td>
+                    <td>{{ row['Quantity'] }}</td>
+                    <td>{{ row['Unit'] }}</td>
+                    <td>{{ row['Rate'] }}</td>
+                    <td>{{ row['Amount'] }}</td>
+                    <td>{{ row['Discount'] }}</td>
+                    <td>{{ row['Total_Amount'] }}</td>
+                    <td>{{ row['Document_No'] }}</td>
+                    <td>{{ row['Document_Date'] }}</td>
+                    <td>{{ row['Document_Status'] }}</td>
+                    <td>{{ row['Filename'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination-container" id="pagination" style="display: none;">
+            <button class="btn btn-secondary">Previous</button>
+            <ul class="pagination">
+                <!-- Pagination numbers -->
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <!-- ... -->
+                <li class="page-item"><a class="page-link" href="#">10</a></li>
+            </ul>
+            <button class="btn btn-secondary">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Browse button triggers the file input click
+        document.getElementById('browseBtn').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        // Show the selected file name
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const fileName = this.files[0].name;
+            document.getElementById('fileName').textContent = fileName;
+        });
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('dragover', function(event) {
+            event.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', function(event) {
+            event.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                const fileName = files[0].name;
+                document.getElementById('fileName').textContent = fileName;
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('resultTable').style.display = 'table';
+                    document.getElementById('pagination').style.display = 'flex';
+                    document.getElementById('errorMsg').style.display = 'none';
+                } else {
+                    document.getElementById('resultTable').style.display = 'none';
+                    document.getElementById('pagination').style.display = 'none';
+                    document.getElementById('errorMsg').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('resultTable').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('errorMsg').style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
